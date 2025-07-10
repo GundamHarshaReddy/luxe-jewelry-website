@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
               onClick={() => navigate('/')}
               className="text-2xl font-cormorant font-bold text-black hover:text-gold transition-colors duration-300"
             >
-              LUXE JEWELRY
+              LUXE & LUSH
             </button>
           </div>
 
