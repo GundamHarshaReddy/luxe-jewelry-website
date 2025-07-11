@@ -16,6 +16,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
+  // Get the first variant for display
+  const primaryVariant = product.variants?.[0];
+  const totalStock = product.variants?.reduce((sum, variant) => sum + variant.stock, 0) || 0;
+  const displayPrice = primaryVariant ? product.base_price + primaryVariant.price : product.base_price;
+
   return (
     <motion.div
       className="group relative bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
@@ -26,7 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Image */}
       <div className="relative aspect-w-4 aspect-h-3 overflow-hidden">
         <img
-          src={product.images[0]}
+          src={primaryVariant?.images?.[0] || '/placeholder-image.jpg'}
           alt={product.name}
           className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -46,16 +51,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </button>
 
         {/* Stock Badge */}
-        {product.stock < 5 && product.stock > 0 && (
+        {totalStock < 5 && totalStock > 0 && (
           <div className="absolute top-4 left-4 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-montserrat font-semibold">
-            Only {product.stock} left
+            Only {totalStock} left
           </div>
         )}
 
         {/* Out of Stock Badge */}
-        {product.stock === 0 && (
+        {totalStock === 0 && (
           <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-montserrat font-semibold">
             Out of Stock
+          </div>
+        )}
+
+        {/* Featured Badge */}
+        {product.is_featured && (
+          <div className="absolute bottom-4 left-4 bg-gold text-black px-2 py-1 rounded-full text-xs font-montserrat font-semibold">
+            Featured
           </div>
         )}
       </div>
@@ -66,15 +78,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <h3 className="text-lg font-cormorant font-semibold text-black group-hover:text-gold transition-colors duration-300">
             {product.name}
           </h3>
-          <div className="flex items-center space-x-1">
-            <Star className="w-4 h-4 fill-gold text-gold" />
-            <span className="text-sm font-montserrat text-gray-600">4.8</span>
-          </div>
+          {product.average_rating > 0 && (
+            <div className="flex items-center space-x-1">
+              <Star className="w-4 h-4 fill-gold text-gold" />
+              <span className="text-sm font-montserrat text-gray-600">
+                {product.average_rating.toFixed(1)}
+              </span>
+              <span className="text-xs font-montserrat text-gray-500">
+                ({product.total_reviews})
+              </span>
+            </div>
+          )}
         </div>
         
         <p className="text-sm text-gray-600 font-montserrat mb-4 line-clamp-2">
           {product.description}
         </p>
+
+        {/* Color Variants */}
+        {product.variants && product.variants.length > 1 && (
+          <div className="mb-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-montserrat text-gray-500">Colors:</span>
+              <div className="flex space-x-1">
+                {product.variants.slice(0, 4).map((variant, index) => (
+                  <div
+                    key={variant.id}
+                    className="w-4 h-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: variant.colorCode }}
+                    title={variant.color}
+                  />
+                ))}
+                {product.variants.length > 4 && (
+                  <span className="text-xs font-montserrat text-gray-500">
+                    +{product.variants.length - 4}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Materials */}
         <div className="flex flex-wrap gap-1 mb-4">
@@ -91,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Price */}
         <div className="flex items-center justify-between">
           <span className="text-xl font-cormorant font-bold text-black">
-            ₹{product.price.toLocaleString()}
+            ₹{displayPrice.toLocaleString('en-IN')}
           </span>
           <span className="text-sm font-montserrat text-gray-500">
             Free Shipping

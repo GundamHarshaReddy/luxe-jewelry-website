@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import { Button } from '../ui/Button';
 
 export const MiniCart: React.FC = () => {
   const { state, dispatch } = useCart();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Auto-expand when items are present
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const updateQuantity = (id: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
@@ -16,8 +18,12 @@ export const MiniCart: React.FC = () => {
     dispatch({ type: 'REMOVE_ITEM', payload: id });
   };
 
-  // Don't show mini cart if no items
-  if (state.items.length === 0) return null;
+  const handleViewFullCart = () => {
+    navigate('/cart');
+  };
+
+  // Don't show mini cart if no items OR if we're on the cart page
+  if (state.items.length === 0 || location.pathname === '/cart') return null;
 
   return (
     <motion.div
@@ -27,9 +33,9 @@ export const MiniCart: React.FC = () => {
       className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
       style={{ width: isExpanded ? '380px' : '280px' }}
     >
-      {/* Mini Header */}
+      {/* Mini Header - Always visible */}
       <div 
-        className="flex items-center justify-between p-3 bg-gradient-to-r from-gold to-yellow-500 text-black cursor-pointer"
+        className="flex items-center justify-between p-3 bg-gradient-to-r from-gold to-yellow-500 text-black cursor-pointer hover:from-yellow-500 hover:to-gold transition-all duration-300"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center space-x-2">
@@ -68,7 +74,7 @@ export const MiniCart: React.FC = () => {
                   >
                     {/* Product Image */}
                     <img
-                      src={item.product.images[0]}
+                      src={item.selectedVariant.images[0] || '/placeholder-image.jpg'}
                       alt={item.product.name}
                       className="w-12 h-12 object-cover rounded-lg"
                     />
@@ -119,9 +125,10 @@ export const MiniCart: React.FC = () => {
                         e.stopPropagation();
                         removeItem(item.id);
                       }}
-                      className="p-1 text-red-500 hover:text-red-700 transition-colors duration-300"
+                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all duration-300"
+                      title="Remove item"
                     >
-                      <X size={12} />
+                      <Trash2 size={12} />
                     </button>
                   </motion.div>
                 ))}
@@ -131,12 +138,21 @@ export const MiniCart: React.FC = () => {
             {/* Footer Actions */}
             <div className="border-t border-gray-200 p-3">
               <div className="space-y-2">
-                <Button variant="primary" className="w-full text-sm py-2">
+                <button
+                  onClick={handleViewFullCart}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-montserrat font-semibold text-sm rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                >
+                  View Full Cart
+                </button>
+                <button
+                  onClick={handleViewFullCart}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-gray-800 to-black hover:from-black hover:to-gray-800 text-white font-montserrat font-semibold text-sm rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                >
                   Checkout Now
-                </Button>
+                </button>
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="w-full text-xs text-gray-500 hover:text-gray-700 transition-colors duration-300"
+                  className="w-full text-xs text-gray-500 hover:text-gray-700 transition-colors duration-300 py-1"
                 >
                   Minimize Cart
                 </button>

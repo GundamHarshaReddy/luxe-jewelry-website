@@ -3,11 +3,13 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Menu, X, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import { productService } from '../../lib/productService';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { state: cartState, dispatch: cartDispatch } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { state: cartState } = useCart();
   const navigate = useNavigate();
 
   const navigation = [
@@ -15,6 +17,21 @@ export const Header: React.FC = () => {
     { name: 'Products', path: '/products' },
     { name: 'Contact', path: '/contact' },
   ];
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      try {
+        const results = await productService.searchProducts(searchQuery.trim());
+        // Navigate to products page with search results
+        navigate('/products', { state: { searchResults: results, searchQuery: searchQuery.trim() } });
+        setSearchQuery('');
+        setIsSearchOpen(false);
+      } catch (error) {
+        console.error('Search error:', error);
+      }
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -55,7 +72,7 @@ export const Header: React.FC = () => {
 
             {/* Shopping Cart */}
             <button
-              onClick={() => cartDispatch({ type: 'TOGGLE_CART' })}
+              onClick={() => navigate('/cart')}
               className="relative p-2 text-gray-700 hover:text-gold transition-colors duration-300"
             >
               <ShoppingBag size={20} />
@@ -88,14 +105,17 @@ export const Header: React.FC = () => {
             exit={{ opacity: 0, height: 0 }}
             className="border-t border-gray-200 py-4"
           >
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 placeholder="Search jewelry..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent"
+                autoFocus
               />
-            </div>
+            </form>
           </motion.div>
         )}
 

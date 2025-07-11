@@ -1,140 +1,78 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ProductGrid } from '../components/products/ProductGrid';
-
-// Sample products data - move this to a separate data file later
-const sampleProducts = [
-  {
-    id: '1',
-    name: 'Diamond Eternity Ring',
-    description: 'Exquisite 18K white gold ring featuring perfectly matched diamonds in a classic eternity setting.',
-    price: 2899,
-    images: [
-      'https://images.pexels.com/photos/1721932/pexels-photo-1721932.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 8,
-    materials: ['18K White Gold', 'Diamond'],
-    gemstones: ['Diamond'],
-    sizes: ['5', '6', '7', '8', '9'],
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z',
-    is_featured: true,
-    specifications: {
-      'Metal Purity': '18K',
-      'Diamond Quality': 'VS1',
-      'Carat Weight': '2.0 ct'
-    }
-  },
-  {
-    id: '2',
-    name: 'Sapphire Pendant Necklace',
-    description: 'Stunning blue sapphire pendant set in 14K yellow gold with a delicate chain.',
-    price: 1599,
-    images: [
-      'https://images.pexels.com/photos/1721930/pexels-photo-1721930.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 5,
-    materials: ['14K Yellow Gold', 'Sapphire'],
-    gemstones: ['Blue Sapphire'],
-    sizes: ['16"', '18"', '20"'],
-    created_at: '2024-01-14T10:00:00Z',
-    updated_at: '2024-01-14T10:00:00Z',
-    is_featured: true,
-    specifications: {
-      'Metal Purity': '14K',
-      'Sapphire Quality': 'AAA',
-      'Carat Weight': '1.5 ct'
-    }
-  },
-  {
-    id: '3',
-    name: 'Pearl Drop Earrings',
-    description: 'Elegant freshwater pearl earrings with 18K rose gold accents.',
-    price: 899,
-    images: [
-      'https://images.pexels.com/photos/1721928/pexels-photo-1721928.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 12,
-    materials: ['18K Rose Gold', 'Freshwater Pearl'],
-    gemstones: ['Pearl'],
-    sizes: ['One Size'],
-    created_at: '2024-01-13T10:00:00Z',
-    updated_at: '2024-01-13T10:00:00Z',
-    is_featured: true,
-    specifications: {
-      'Metal Purity': '18K',
-      'Pearl Type': 'Freshwater',
-      'Pearl Size': '8mm'
-    }
-  },
-  {
-    id: '4',
-    name: 'Tennis Bracelet',
-    description: 'Classic diamond tennis bracelet featuring premium diamonds in 18K white gold.',
-    price: 3299,
-    images: [
-      'https://images.pexels.com/photos/1721929/pexels-photo-1721929.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 3,
-    materials: ['18K White Gold', 'Diamond'],
-    gemstones: ['Diamond'],
-    sizes: ['6.5"', '7"', '7.5"', '8"'],
-    created_at: '2024-01-12T10:00:00Z',
-    updated_at: '2024-01-12T10:00:00Z',
-    is_featured: true,
-    specifications: {
-      'Metal Purity': '18K',
-      'Diamond Quality': 'VS1',
-      'Total Carat Weight': '5.0 ct'
-    }
-  },
-  {
-    id: '5',
-    name: 'Emerald Cocktail Ring',
-    description: 'Statement emerald ring with diamond accents in 18K yellow gold.',
-    price: 4299,
-    images: [
-      'https://images.pexels.com/photos/1721931/pexels-photo-1721931.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 2,
-    materials: ['18K Yellow Gold', 'Emerald', 'Diamond'],
-    gemstones: ['Emerald', 'Diamond'],
-    sizes: ['5', '6', '7', '8', '9'],
-    created_at: '2024-01-11T10:00:00Z',
-    updated_at: '2024-01-11T10:00:00Z',
-    is_featured: false,
-    specifications: {
-      'Metal Purity': '18K',
-      'Emerald Quality': 'AAA',
-      'Carat Weight': '3.5 ct'
-    }
-  },
-  {
-    id: '6',
-    name: 'Diamond Stud Earrings',
-    description: 'Classic diamond stud earrings in 14K white gold settings.',
-    price: 1299,
-    images: [
-      'https://images.pexels.com/photos/1721927/pexels-photo-1721927.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    stock: 15,
-    materials: ['14K White Gold', 'Diamond'],
-    gemstones: ['Diamond'],
-    sizes: ['One Size'],
-    created_at: '2024-01-10T10:00:00Z',
-    updated_at: '2024-01-10T10:00:00Z',
-    is_featured: false,
-    specifications: {
-      'Metal Purity': '14K',
-      'Diamond Quality': 'VS2',
-      'Total Carat Weight': '1.0 ct'
-    }
-  }
-];
+import { useProducts } from '../hooks/useProducts';
+import { Button } from '../components/ui/Button';
+import type { Product } from '../types';
 
 export const ProductsPage: React.FC = () => {
+  const location = useLocation();
+  const { products, loading, error, refreshProducts } = useProducts();
+  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Handle search results from navigation state
+  useEffect(() => {
+    if (location.state?.searchResults && location.state?.searchQuery) {
+      setDisplayProducts(location.state.searchResults);
+      setSearchQuery(location.state.searchQuery);
+    } else {
+      setDisplayProducts(products);
+      setSearchQuery('');
+    }
+  }, [location.state, products]);
+
+  const title = searchQuery ? `Search Results for "${searchQuery}"` : 'All Products';
+
+  if (loading) {
+    return (
+      <div className="pt-16 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-12">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto mb-12"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-300 aspect-square rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-16 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h2 className="text-3xl font-cormorant font-bold text-black mb-4">
+              Oops! Something went wrong
+            </h2>
+            <p className="text-red-600 mb-6">{error}</p>
+            <Button 
+              variant="primary" 
+              onClick={refreshProducts}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-16">
-      <ProductGrid products={sampleProducts as any} title="All Products" />
+      <ProductGrid products={displayProducts} title={title} />
     </div>
   );
 };

@@ -1,24 +1,54 @@
+export interface ProductVariant {
+  id: string;
+  color: string;
+  colorCode: string; // hex color code
+  images: string[];
+  stock: number;
+  price: number;
+}
+
+export interface ProductReview {
+  id: string;
+  user_name: string;
+  user_email?: string;
+  user_phone?: string;
+  user_gender?: 'male' | 'female';
+  rating: number; // 1-5
+  comment: string;
+  created_at: string;
+  verified_purchase: boolean;
+  admin_reply?: string;
+  admin_reply_at?: string;
+  admin_name?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
-  images: string[];
-  stock: number;
+  detailed_description: string;
+  base_price: number;
+  category: string; // 'bangles', 'bracelets', etc.
+  variants: ProductVariant[]; // color variants
+  sizes: string[]; // ['2.1', '2.2', '2.3', '2.4', etc.]
   materials: string[];
-  gemstones: string[];
-  sizes: string[];
+  features: string[]; // special features like 'adjustable', 'waterproof', etc.
+  care_instructions: string;
   created_at: string;
   updated_at: string;
   is_featured: boolean;
-  specifications: Record<string, string>;
+  average_rating: number;
+  total_reviews: number;
+  reviews: ProductReview[];
+  tags: string[]; // for search and filtering
 }
 
 export interface CartItem {
   id: string;
   product: Product;
+  selectedVariant: ProductVariant;
   quantity: number;
-  size?: string;
+  size: string;
   personalization?: string;
   price: number;
 }

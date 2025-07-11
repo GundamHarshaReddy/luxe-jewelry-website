@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { CartItem, Product } from '../types';
+import { CartItem, Product, ProductVariant } from '../types';
 
 interface CartState {
   items: CartItem[];
@@ -9,7 +9,7 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: { product: Product; quantity: number; size?: string; personalization?: string } }
+  | { type: 'ADD_ITEM'; payload: { product: Product; selectedVariant: ProductVariant; quantity: number; size: string; personalization?: string } }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' }
@@ -27,9 +27,11 @@ const initialState: CartState = {
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const { product, quantity, size, personalization } = action.payload;
+      const { product, selectedVariant, quantity, size, personalization } = action.payload;
       const existingItem = state.items.find(
-        item => item.product.id === product.id && item.size === size
+        item => item.product.id === product.id && 
+                item.selectedVariant.id === selectedVariant.id && 
+                item.size === size
       );
 
       let newItems;
@@ -41,12 +43,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         );
       } else {
         const newItem: CartItem = {
-          id: `${product.id}-${size || 'default'}-${Date.now()}`,
+          id: `${product.id}-${selectedVariant.id}-${size}-${Date.now()}`,
           product,
+          selectedVariant,
           quantity,
           size,
           personalization,
-          price: product.price,
+          price: product.base_price + selectedVariant.price,
         };
         newItems = [...state.items, newItem];
       }
