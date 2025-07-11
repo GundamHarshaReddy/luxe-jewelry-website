@@ -4,6 +4,8 @@ import { CartProvider } from './contexts/CartContext';
 import { Header } from './components/layout/Header';
 import { MiniCart } from './components/cart/MiniCart';
 import { HomePage, ContactPage, ProductsPage, ProductDetailsPage, CartPage } from './pages';
+import { PaymentSuccess } from './pages/PaymentSuccess';
+import { PaymentFailed } from './pages/PaymentFailed';
 import { AdminRoutes } from './pages/AdminRoutes';
 
 const AppContent: React.FC = () => {
@@ -29,6 +31,8 @@ const AppContent: React.FC = () => {
         <Route path="/products/:id" element={<ProductDetailsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/failed" element={<PaymentFailed />} />
       </Routes>
       <MiniCart />
     </div>
