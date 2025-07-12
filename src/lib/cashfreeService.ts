@@ -135,7 +135,7 @@ class CashfreeService {
   }): Promise<CreateOrderResponse> {
     try {
       // Call your backend endpoint instead of Cashfree API directly
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
       const response = await fetch(`${backendUrl}/api/payment`, {
         method: "POST",
         headers: {
