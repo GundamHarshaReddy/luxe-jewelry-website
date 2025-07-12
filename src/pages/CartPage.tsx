@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Plus, Minus, X, ShoppingBag, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '../components/ui/Button';
+import { CustomerDetailsForm } from '../components/cart/CustomerDetailsForm';
+import { PaymentButton } from '../components/cart/PaymentButton';
 
 export const CartPage: React.FC = () => {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isPaymentStarted, setIsPaymentStarted] = useState(false);
 
   const updateQuantity = (id: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
@@ -185,14 +194,49 @@ export const CartPage: React.FC = () => {
                 <span>₹{state.total.toLocaleString()}</span>
               </div>
 
+              {/* Customer Details Form */}
+              <div className="mb-6">
+                <CustomerDetailsForm
+                  onCustomerInfoChange={setCustomerInfo}
+                  initialValues={customerInfo}
+                />
+              </div>
+
+              {/* Payment Error */}
+              {paymentError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm">{paymentError}</p>
+                </div>
+              )}
+
+              {/* Payment Button */}
+              <div className="mb-4">
+                <PaymentButton
+                  totalAmount={state.total}
+                  items={state.items.map(item => ({
+                    id: item.id,
+                    name: item.product.name,
+                    price: item.price,
+                    quantity: item.quantity
+                  }))}
+                  customerInfo={customerInfo}
+                  onPaymentStart={() => {
+                    setIsPaymentStarted(true);
+                    setPaymentError(null);
+                  }}
+                  onPaymentError={(error) => {
+                    setPaymentError(error);
+                    setIsPaymentStarted(false);
+                  }}
+                />
+              </div>
+
               <div className="space-y-3">
-                <Button variant="primary" className="w-full">
-                  Proceed to Checkout
-                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
                   onClick={() => navigate('/products')}
+                  disabled={isPaymentStarted}
                 >
                   Continue Shopping
                 </Button>

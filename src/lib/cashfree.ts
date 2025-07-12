@@ -124,45 +124,10 @@ class CashfreeService {
     return `ORDER_${timestamp}_${random}`;
   }
 
-  // Create order using backend API to avoid CORS
-  async createOrder(orderData: {
-    amount: number;
-    currency?: string;
-    customerDetails: CustomerDetails;
-    orderNote?: string;
-    returnUrl?: string;
-    notifyUrl?: string;
-  }): Promise<CreateOrderResponse> {
-    try {
-      // Call your backend endpoint instead of Cashfree API directly
-      const response = await fetch("http://localhost:3001/api/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          order_amount: orderData.amount,
-          customer_id: orderData.customerDetails.customer_id,
-          customer_name: orderData.customerDetails.customer_name,
-          customer_email: orderData.customerDetails.customer_email,
-          customer_phone: orderData.customerDetails.customer_phone,
-          return_url: orderData.returnUrl || `${window.location.origin}/payment/success`
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Backend API Error:", errorData);
-        throw new Error(`Order creation failed: ${response.statusText} - ${errorData.message || "Unknown error"}`);
-      }
-
-      const orderResponse: CreateOrderResponse = await response.json();
-      console.log("Order created successfully via backend:", orderResponse);
-      return orderResponse;
-    } catch (error) {
-      console.error("Error creating order via backend:", error);
-      throw error;
-    }
+  // Create order using Cashfree API
+  // Disabled: Do not use direct API calls from frontend due to CORS. Use cashfreeService.ts instead.
+  async createOrder() {
+    throw new Error('Direct Cashfree API calls are disabled in the frontend. Use your backend endpoint via cashfreeService.ts.');
   }
 
   // Redirect flow - Opens checkout in new tab
@@ -218,32 +183,9 @@ class CashfreeService {
   }
 
   // Get order status
-  async getOrderStatus(orderId: string): Promise<OrderStatusResponse> {
-    try {
-      console.log('Fetching order status for:', orderId);
-
-      const response = await fetch(`${this.baseUrl}/orders/${orderId}`, {
-        method: 'GET',
-        headers: {
-          'x-api-version': '2023-08-01',
-          'x-client-id': this.appId,
-          'x-client-secret': this.secretKey
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Failed to fetch order status: ${response.statusText} - ${errorData.message || 'Unknown error'}`);
-      }
-
-      const orderStatus: OrderStatusResponse = await response.json();
-      console.log('Order status fetched:', orderStatus);
-      
-      return orderStatus;
-    } catch (error) {
-      console.error('Error fetching order status:', error);
-      throw error;
-    }
+  // Disabled: Do not use direct API calls from frontend due to CORS. Use cashfreeService.ts instead.
+  async getOrderStatus() {
+    throw new Error('Direct Cashfree API calls are disabled in the frontend. Use your backend endpoint via cashfreeService.ts.');
   }
 
   // Verify payment on return URL
@@ -268,5 +210,4 @@ class CashfreeService {
   }
 }
 
-// Export singleton instance
 export const cashfree = new CashfreeService();

@@ -60,9 +60,12 @@ class AdminProductService {
 
       if (variants && variants.length > 0) {
         const variantData = variants.map(variant => ({
-          ...variant,
-          product_id: productResult.id,
-          id: undefined
+          color: variant.color,
+          color_code: variant.colorCode, // map camelCase to snake_case for DB
+          images: variant.images,
+          stock: variant.stock,
+          price_adjustment: variant.price,
+          product_id: productResult.id
         }));
 
         const { error: variantError } = await supabase
@@ -105,9 +108,12 @@ class AdminProductService {
 
         if (variants.length > 0) {
           const variantData = variants.map(variant => ({
-            ...variant,
-            product_id: id,
-            id: undefined
+            color: variant.color,
+            color_code: variant.colorCode, // map camelCase to snake_case for DB
+            images: variant.images,
+            stock: variant.stock,
+            price_adjustment: variant.price,
+            product_id: id
           }));
 
           const { error: variantError } = await supabase
@@ -196,19 +202,24 @@ class AdminProductService {
   async uploadImage(file: File): Promise<string> {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `product-images/${fileName}`;
+      const uniqueName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+      const filePath = `variants/${uniqueName}`;
 
+      // Use the correct bucket name: 'product-images' and set content type
       const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file);
+        .from('product-images')
+        .upload(filePath, file, {
+          contentType: file.type || 'image/png',
+          upsert: true // allow overwrite for debugging
+        });
 
       if (uploadError) {
+        console.error('Supabase upload error:', uploadError, uploadError.message);
         throw uploadError;
       }
 
       const { data: urlData } = supabase.storage
-        .from('products')
+        .from('product-images')
         .getPublicUrl(filePath);
 
       return urlData.publicUrl;

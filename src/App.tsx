@@ -3,10 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { CartProvider } from './contexts/CartContext';
 import { Header } from './components/layout/Header';
 import { MiniCart } from './components/cart/MiniCart';
-import { HomePage, ContactPage, ProductsPage, ProductDetailsPage, CartPage } from './pages';
-import { PaymentSuccess } from './pages/PaymentSuccess';
-import { PaymentFailed } from './pages/PaymentFailed';
-import { AdminRoutes } from './pages/AdminRoutes';
+import { HomePage, ContactPage, ProductsPage, ProductDetailsPage, CartPage, AdminRoutes, PaymentSuccess, PaymentFailed } from './pages';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
