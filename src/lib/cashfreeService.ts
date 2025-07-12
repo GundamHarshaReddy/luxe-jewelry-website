@@ -84,18 +84,12 @@ class CashfreeService {
   private appId: string;
   private secretKey: string;
   private environment: 'sandbox' | 'production';
-  private baseUrl: string;
   private cashfree: any;
 
   constructor() {
     this.appId = import.meta.env.VITE_CASHFREE_APP_ID;
     this.secretKey = import.meta.env.VITE_CASHFREE_SECRET_KEY;
     this.environment = (import.meta.env.VITE_CASHFREE_ENVIRONMENT as 'sandbox' | 'production') || 'production';
-    
-    // Set base URL based on environment
-    this.baseUrl = this.environment === 'production' 
-      ? 'https://api.cashfree.com/pg' 
-      : 'https://sandbox.cashfree.com/pg';
 
     if (!this.appId || !this.secretKey) {
       throw new Error('Cashfree API credentials are not configured. Please check your environment variables.');
@@ -287,29 +281,48 @@ class CashfreeService {
     }
   }
 
-  // Get order status
+  // Get order status via backend API to avoid CORS
   async getOrderStatus(orderId: string): Promise<OrderStatusResponse> {
     try {
       console.log('Fetching order status for:', orderId);
 
-      const response = await fetch(`${this.baseUrl}/orders/${orderId}`, {
-        method: 'GET',
+      // Use backend API instead of direct Cashfree API call
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const response = await fetch(`${backendUrl}/api/order-status`, {
+        method: 'POST',
         headers: {
-          'x-api-version': '2023-08-01',
-          'x-client-id': this.appId,
-          'x-client-secret': this.secretKey
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          order_id: orderId
+        })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("Backend API Error for order status:", errorData);
         throw new Error(`Failed to fetch order status: ${response.statusText} - ${errorData.message || 'Unknown error'}`);
       }
 
-      const orderStatus: OrderStatusResponse = await response.json();
-      console.log('Order status fetched:', orderStatus);
-      
-      return orderStatus;
+      const responseText = await response.text();
+      let orderStatus: any;
+      try {
+        orderStatus = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON Parse Error for order status:', parseError);
+        throw new Error('Backend returned invalid JSON response for order status');
+      }
+
+      // Handle wrapped response format from backend
+      let actualOrderStatus: OrderStatusResponse;
+      if (orderStatus.success && orderStatus.data) {
+        actualOrderStatus = orderStatus.data as OrderStatusResponse;
+      } else {
+        actualOrderStatus = orderStatus;
+      }
+
+      console.log('Order status fetched:', actualOrderStatus);
+      return actualOrderStatus;
     } catch (error) {
       console.error('Error fetching order status:', error);
       throw error;
