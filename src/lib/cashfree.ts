@@ -189,24 +189,9 @@ class CashfreeService {
   }
 
   // Verify payment on return URL
-  async verifyPayment(orderId: string): Promise<boolean> {
-    try {
-      const orderStatus = await this.getOrderStatus(orderId);
-      
-      // Check if order is paid
-      const isPaid = orderStatus.order_status === 'PAID';
-      
-      // Additional check for payment status if payments array exists
-      if (orderStatus.payments && orderStatus.payments.length > 0) {
-        const latestPayment = orderStatus.payments[orderStatus.payments.length - 1];
-        return isPaid && latestPayment.payment_status === 'SUCCESS';
-      }
-      
-      return isPaid;
-    } catch (error) {
-      console.error('Error verifying payment:', error);
-      return false;
-    }
+  // Disabled: Payment verification should be done via backend API
+  async verifyPayment(_orderId: string): Promise<boolean> {
+    throw new Error('Payment verification is disabled in the frontend. Use your backend endpoint for verification.');
   }
 }
 
