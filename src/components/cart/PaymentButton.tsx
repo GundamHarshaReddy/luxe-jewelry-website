@@ -56,11 +56,22 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
 
       console.log('Order created:', orderResponse);
 
+      // Validate response
+      if (!orderResponse.payment_session_id) {
+        throw new Error('Invalid payment session ID received from server');
+      }
+
+      console.log('=== INITIATING PAYMENT REDIRECT ===');
+      console.log('Payment Session ID:', orderResponse.payment_session_id);
+      console.log('Order ID:', orderResponse.order_id);
+
       // Redirect to payment page using Cashfree SDK
       await cashfree.redirectToPayment(
         orderResponse.payment_session_id,
         `${window.location.origin}/payment/success?order_id=${orderResponse.order_id}`
       );
+
+      console.log('=== PAYMENT REDIRECT COMPLETED ===');
 
     } catch (error) {
       console.error('Payment initiation failed:', error);

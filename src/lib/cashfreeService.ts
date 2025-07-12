@@ -154,11 +154,20 @@ class CashfreeService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Backend API Error:", errorData);
+        console.error("Response status:", response.status);
+        console.error("Response headers:", response.headers);
         throw new Error(`Order creation failed: ${response.statusText} - ${errorData.message || "Unknown error"}`);
       }
 
       const orderResponse: CreateOrderResponse = await response.json();
       console.log("Order created successfully via backend:", orderResponse);
+      
+      // Validate the response has required fields
+      if (!orderResponse.payment_session_id) {
+        console.error("Missing payment_session_id in response:", orderResponse);
+        throw new Error("Invalid response from backend: missing payment_session_id");
+      }
+      
       return orderResponse;
     } catch (error) {
       console.error("Error creating order via backend:", error);
@@ -169,7 +178,14 @@ class CashfreeService {
   // Redirect flow - Opens checkout in new tab
   async redirectToPayment(paymentSessionId: string, returnUrl?: string): Promise<void> {
     try {
+      console.log('=== PAYMENT REDIRECT DEBUG ===');
+      console.log('Payment Session ID:', paymentSessionId);
+      console.log('Return URL:', returnUrl);
+      console.log('Cashfree SDK available:', !!this.cashfree);
+      console.log('Window.Cashfree available:', !!window.Cashfree);
+      
       if (!this.cashfree) {
+        console.log('Reinitializing Cashfree SDK...');
         this.initializeSDK();
       }
 
@@ -182,8 +198,15 @@ class CashfreeService {
       console.log('Initiating payment with options:', checkoutOptions);
 
       if (this.cashfree && this.cashfree.checkout) {
+        console.log('Calling Cashfree checkout...');
         await this.cashfree.checkout(checkoutOptions);
+        console.log('Cashfree checkout completed');
       } else {
+        console.error('Cashfree SDK not available:', {
+          cashfree: this.cashfree,
+          checkout: this.cashfree?.checkout,
+          windowCashfree: window.Cashfree
+        });
         throw new Error('Cashfree SDK not loaded properly. Please refresh the page and try again.');
       }
     } catch (error) {
