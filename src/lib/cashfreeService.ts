@@ -136,6 +136,17 @@ class CashfreeService {
     try {
       // Call your backend endpoint instead of Cashfree API directly
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      console.log('=== FRONTEND TO BACKEND REQUEST ===');
+      console.log('Backend URL:', backendUrl);
+      console.log('Request payload:', {
+        order_amount: orderData.amount,
+        customer_id: orderData.customerDetails.customer_id,
+        customer_name: orderData.customerDetails.customer_name,
+        customer_email: orderData.customerDetails.customer_email,
+        customer_phone: orderData.customerDetails.customer_phone,
+        return_url: orderData.returnUrl || `${window.location.origin}/payment/success`
+      });
+
       const response = await fetch(`${backendUrl}/api/payment`, {
         method: "POST",
         headers: {
@@ -151,6 +162,11 @@ class CashfreeService {
         })
       });
 
+      console.log('=== BACKEND RESPONSE DEBUG ===');
+      console.log('Response OK:', response.ok);
+      console.log('Response Status:', response.status);
+      console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Backend API Error:", errorData);
@@ -159,12 +175,29 @@ class CashfreeService {
         throw new Error(`Order creation failed: ${response.statusText} - ${errorData.message || "Unknown error"}`);
       }
 
-      const orderResponse: CreateOrderResponse = await response.json();
-      console.log("Order created successfully via backend:", orderResponse);
+      const responseText = await response.text();
+      console.log('=== RAW BACKEND RESPONSE ===');
+      console.log('Raw response text:', responseText);
+
+      let orderResponse: CreateOrderResponse;
+      try {
+        orderResponse = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        console.error('Response was not valid JSON:', responseText);
+        throw new Error('Backend returned invalid JSON response');
+      }
+
+      console.log("=== PARSED BACKEND RESPONSE ===");
+      console.log("Full response object:", orderResponse);
+      console.log("Payment session ID found:", orderResponse.payment_session_id);
+      console.log("All response keys:", Object.keys(orderResponse));
       
       // Validate the response has required fields
       if (!orderResponse.payment_session_id) {
         console.error("Missing payment_session_id in response:", orderResponse);
+        console.error("Response type:", typeof orderResponse);
+        console.error("Response keys:", Object.keys(orderResponse));
         throw new Error("Invalid response from backend: missing payment_session_id");
       }
       
