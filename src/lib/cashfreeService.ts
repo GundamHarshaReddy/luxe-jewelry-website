@@ -190,18 +190,31 @@ class CashfreeService {
 
       console.log("=== PARSED BACKEND RESPONSE ===");
       console.log("Full response object:", orderResponse);
-      console.log("Payment session ID found:", orderResponse.payment_session_id);
-      console.log("All response keys:", Object.keys(orderResponse));
+      
+      // Handle wrapped response format from backend
+      let actualOrderData: CreateOrderResponse;
+      const responseData = orderResponse as any;
+      if (responseData.success && responseData.data) {
+        console.log("Backend returned wrapped response, extracting data...");
+        actualOrderData = responseData.data as CreateOrderResponse;
+      } else {
+        console.log("Backend returned direct response");
+        actualOrderData = orderResponse;
+      }
+      
+      console.log("Actual order data:", actualOrderData);
+      console.log("Payment session ID found:", actualOrderData.payment_session_id);
+      console.log("All order data keys:", Object.keys(actualOrderData));
       
       // Validate the response has required fields
-      if (!orderResponse.payment_session_id) {
-        console.error("Missing payment_session_id in response:", orderResponse);
-        console.error("Response type:", typeof orderResponse);
-        console.error("Response keys:", Object.keys(orderResponse));
+      if (!actualOrderData.payment_session_id) {
+        console.error("Missing payment_session_id in response:", actualOrderData);
+        console.error("Response type:", typeof actualOrderData);
+        console.error("Response keys:", Object.keys(actualOrderData));
         throw new Error("Invalid response from backend: missing payment_session_id");
       }
       
-      return orderResponse;
+      return actualOrderData;
     } catch (error) {
       console.error("Error creating order via backend:", error);
       throw error;
